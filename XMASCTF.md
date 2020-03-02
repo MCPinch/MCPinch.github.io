@@ -14,7 +14,7 @@ This worked since 1=1 is always true so then the verification is never made, thi
 I am greeted with the same login screen as before, but something has changed...
 ![ScienceLab2Login](/SiteImages/CTFpics/Sciencelab2login.png)
 Logging in the same way  as before gave me a clue for the user creds.
->Username is 'MrFlibble'
+_Username is 'MrFlibble'_
 But what if I need the password?
 Taking a look at the http-post form properties in source code, can see the data that is submitted with the form.
 ![ScienceLab2Form](/SiteImages/CTFpics/Sciencelab2postform.png)
