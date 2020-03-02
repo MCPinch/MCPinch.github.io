@@ -7,4 +7,4 @@ This will be used to post things I have done and learnt during my hacking journe
 - [Hack the box writeups...(when made legal)](HacktheBox.md)
 - [XMAS CTF](XMASCTF.md)
 
-![Angry Celestia](/SiteImages/celeste2.gif)
+![HTB Badge](https://www.hackthebox.eu/badge/image/60062)
