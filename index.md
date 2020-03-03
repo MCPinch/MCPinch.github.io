@@ -1,3 +1,4 @@
+<link rel="shortcut icon" type="image/x-icon" href="favicon.png">
 ## Welcome to my website!
 
 This will be used to post things I have done and learnt during my hacking journey.
