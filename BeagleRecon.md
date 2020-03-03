@@ -28,10 +28,13 @@ Now onto the meaty part, the code!
 
 I wrote code for the scanner that:
 
->Pings hosts and returns a list of the live ones.
->TCP scans the hosts by probing a common tcp port.
->Calculates the range of scannable ip's on the network depending on ip and netmask of eth0 interface...
->SNMP enumeration (limited functionality) 
+- Pings hosts and returns a list of the live ones.
+- TCP scans the hosts by probing a common tcp port.
+- Calculates the range of scannable ip's on the network depending on ip and netmask of eth0 interface...
+- SNMP enumeration (limited functionality) 
 
 ### Range Calculator:
 This has taken the most time and brainpower so far. What this part of the script does is automatically calculate the range of ip's it can scan and it does this by looking at the ethernet interface of the beaglebone, looking at the ip and subnet mask, then doing calculations on them.
+
+First, I get the ip and netmask from eth0 with the following functions:
+*I DO NOT KNOW HOW THESE WORK AND I DIDN'T WRITE THEM*
