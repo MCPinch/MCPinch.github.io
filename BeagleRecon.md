@@ -54,7 +54,7 @@ netmask = get_netmask('eth0')
 `
 
 `def range_calculator(ip,netmask,choice):
-        '''calculate range of ip addresses to scan'''
+        
 
         #bitwise can only be done on int
         #bitwise can only be done on single numbers
@@ -129,15 +129,15 @@ Phew, that wasn't too bad. Right?! :/
 Now that we have done all the fancy calculations, we need to figure out a way to process this information into something useful. In other words, how can i loop through each address for a given address range? 
 I came up with the following solution:
 
-`def Pingscan(indx,ranges,ip): #scans  a range of ip's that we can change... prints if the ping is successful or not.
-        '''Pings the range of ip's depending on what range was calculated in the range calculation function. Returns a list of ip addresses of active machines.'''
+`def Pingscan(indx,ranges,ip): 
+       
         if len(indx) == 1:
                 for i in range(0,(ranges[0]+1),1):
                         address=str(ip[0])+'.'+str(ip[1])+'.'+str(ip[2])+'.'+str(i)
                         print("Trying "+ address)
                         res=subprocess.call(['ping','-c','1',address])
                         if res==0:
-                                print("Ping to " + address + " ok") #maybe find a way to stop so much printing and also disclude our BBB's ip address from the list.
+                                print("Ping to " + address + " ok") 
                                 success.append(address)
 
         if len(indx)==2:
