@@ -39,21 +39,24 @@ This has taken the most time and brainpower so far. What this part of the script
 First, I get the ip and netmask from eth0 with the following functions:
 *I DO NOT KNOW HOW THESE WORK AND I DIDN'T WRITE THEM*
 
-` def get_ip_address(ifname):
+```python
+def get_ip_address(ifname):
         s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x8915,struct.pack('256s', ifname[:15]))[20:24])
 
 def get_netmask(ifname):
         s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         return socket.inet_ntoa(fcntl.ioctl(s.fileno(),0x891b,struct.pack('256s',ifname))[20:24])
-`
+```
 Then, I assign them a varibale and pass them to the range calc function.
 
-`ip = get_ip_address('eth0')
+```python
+ip = get_ip_address('eth0')
 netmask = get_netmask('eth0')
-`
+```
 
-`def range_calculator(ip,netmask,choice):
+```python
+def range_calculator(ip,netmask,choice):
         
 
         #bitwise can only be done on int
@@ -113,7 +116,7 @@ netmask = get_netmask('eth0')
                n=input("Enter 1 for windows scan or 2 for linux: ")
                brute=input("Enter 1 for brute force and 2 for scan till discovery: ")
                runTCPScanner(indx,ranges,first_address,n,brute,0)
-`
+```
 
 Ok, lets break this down.
 - First, I split the ip and netmask into a list of bits without the dots.
@@ -129,7 +132,8 @@ Phew, that wasn't too bad. Right?! :/
 Now that we have done all the fancy calculations, we need to figure out a way to process this information into something useful. In other words, how can i loop through each address for a given address range? 
 I came up with the following solution:
 
- `def Pingscan(indx,ranges,ip): 
+ ```python
+ def Pingscan(indx,ranges,ip): 
        
         if len(indx) == 1:
                 for i in range(0,(ranges[0]+1),1):
@@ -160,7 +164,7 @@ I came up with the following solution:
                                                 success.append(address)
 
         return success # returns array of succesful pings
-`
+```
 
 Simply, it goes through a loop depending on how many changes occur at each bit and calls 'ping' on that ip.
 - If the length of the index list is 1 then we know that only the outer bit has changed, etc.
