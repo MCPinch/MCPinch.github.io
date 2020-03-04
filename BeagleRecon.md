@@ -129,7 +129,7 @@ Phew, that wasn't too bad. Right?! :/
 Now that we have done all the fancy calculations, we need to figure out a way to process this information into something useful. In other words, how can i loop through each address for a given address range? 
 I came up with the following solution:
 
-`def Pingscan(indx,ranges,ip): 
+ `def Pingscan(indx,ranges,ip): 
        
         if len(indx) == 1:
                 for i in range(0,(ranges[0]+1),1):
