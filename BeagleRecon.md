@@ -1,7 +1,7 @@
 Working on a network recon tool that works with the BBB... This is a group project and I will outline how I managed to do my part.
 The goal is to have a device you can plug into a network via Ethernet and it will map out devices on there and other useful enumeration things.
 
-## Setting up the BeagleBone Black:
+# Setting up the BeagleBone Black:
 Out the box, the BBB is pretty useless... :(
 I would recommend getting a 16gb microSD card online, this is used for updating the beaglebone.
 
@@ -23,7 +23,7 @@ Do le updates and should be ready to go... oh and one more thing!
 
 I use the pysnmp library for my script, so you need to pip install it (if pip is being annoying and giving you errors after you have updated, use `uninstall distributions` and it should work)
 
-## The CODE:
+# The CODE:
 Now onto the meaty part, the code!
 
 I wrote code for the scanner that:
@@ -32,8 +32,9 @@ I wrote code for the scanner that:
 - TCP scans the hosts by probing a common tcp port.
 - Calculates the range of scannable ip's on the network depending on ip and netmask of eth0 interface...
 - SNMP enumeration (limited functionality) 
+- Some extra little bits...
 
-### Range Calculator:
+## Range Calculator:
 This has taken the most time and brainpower so far. What this part of the script does is automatically calculate the range of ip's it can scan and it does this by looking at the ethernet interface of the beaglebone, looking at the ip and subnet mask, then doing calculations on them.
 
 First, I get the ip and netmask from eth0 with the following functions:
@@ -128,6 +129,9 @@ Ok, lets break this down.
 
 Phew, that wasn't too bad. Right?! :/
 
+### But why?
+With this, the beaglebone can be plugged into any network and it will automatically find the right range.  This takes  a lot of strain off of other functions that may be added later and makes enumeration much easier if we know the scope to scan beforehand. 
+
 ## Ping Scan:
 Now that we have done all the fancy calculations, we need to figure out a way to process this information into something useful. In other words, how can i loop through each address for a given address range? 
 I came up with the following solution:
@@ -170,3 +174,201 @@ Simply, it goes through a loop depending on how many changes occur at each bit a
 - If the length of the index list is 1 then we know that only the outer bit has changed, etc.
 - Loop through depending on the amount of change at that index.
 - Append the live addresses to a list called 'success'. This will be used later.
+
+### But why?
+It is a simple and easy way to map devices on a network. However, generates a lot of noise. In the future I may want to look into scanning a network silently. 
+
+## TCP Scan:
+Now onto the TCP scan, this is another option in the scanning menu as it's a different way hosts can be detected, if pinging isn't viable for some reason.
+
+My script probes common ports (which change depending on the operating system you are scanning) and if the connection comes back ok then the machine is live.
+
+```python
+def TCPScan(address,n,port): #function to set up tcp syn-ack handshake
+
+        s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        socket.setdefaulttimeout(1)
+        if n==1:
+                print("Windows discovery.")
+                print("Trying connections on port " + str(port) +"...\n")
+                result = s.connect_ex((address,port)) #connect to a common open port... should iterate through some so have more chance of finding an open port.
+                if result ==0:
+                        return 1
+                else:
+                        return 0
+        else:
+                print("Linux discovery.")
+                print("Trying connections on port " +str(port)+"...\n")
+                result=s.connect_ex((address,port))
+                if result==0:
+                        return 1
+                else:
+                        return 0
+
+def runTCPScanner(indx,ranges,ip,n,port): #calls tcp scan depending on range and returns live hosts.
+                windows=[135,137,138,139,445]
+                linux=[20,21,22,23,25,80,111,443,445,631,993,995]
+                #port is index and starts at 0
+                if len(indx)==1:
+                       for i in range(0,(ranges[0]+1),1):
+                             address=str(ip[0])+'.'+str(ip[1])+'.'+str(ip[2])+'.'+str(i)
+                             print(address)
+                             if n ==1:
+                                  for x in windows:
+                                        if (TCPScan(address,n,x)):
+                                                print(str(address) + " is live.")
+                                                if address not in success:
+                                                        success.append(address)
+                             else:
+                                  for x in linux:
+                                        if (TCPScan(address,n,x)):
+                                                print(str(address) + "is Live.")
+                                                if address not in success:
+                                                        success.append(address)
+
+                if len(indx)==2:
+                       for i in range(0,(ranges[0]+1),1):
+                             for x in range(0,(ranges[1]+1),1):
+                                  address=str(ip[0])+'.'+str(ip[1])+'.'+str(i)+'.'+str(x)
+                                  if n==1:
+                                      for x in windows:
+                                              if (TCPScan(address,n,x)):
+                                                      print(str(address) + " is live.")
+                                                      if address not in success:
+                                                               success.append(address)
+                                  else:
+                                      for x in linux:
+                                              if (TCPScan(address,n,x)):
+                                                      print(str(address)+" is live.")
+                                                      if address not in success:
+                                                              success.append(address)
+
+
+                if len(indx)==3:
+                       for i in range(0,(ranges[0]+1),1):
+                             for x in range(0,(ranges[1]+1),1):
+                                  for y in range(0,(ranges[2]+1),1):
+                                       address=str(ip[0])+'.'+str(i)+'.'+str(x)+'.'+str(y)
+                                       if n==1:
+                                               for x in windows:
+                                                        if (TCPScan(address,n,x)):
+                                                                  print(str(address) + " is live.")
+                                                                  if address not in success:
+                                                                          success.append(address)
+
+                                       else:
+                                              for x in linux:
+                                                      if (TCPScan(address,n,x)):
+                                                               print(str(address)+" is live.")
+                                                               if address not in success:
+                                                                       success.append(address)
+
+                       return success
+
+```
+
+First, the TCPScan function takes in 3 arguments, the address to scan, the mystery variable?! 'n' and the port to probe.
+The argument 'n' is just when the user chooses what OS to scan, it's 1 for windows and 2 for linux in this case.
+This can be seen at the end of my rangecalc function earlier...
+
+- The rest of this function should be pretty self explanatory, I use sockets to connect to the port and if a connection is successful it returns  1, else it returns 0. 
+
+The next function runTCPScanner takes the variables from  the range calculation. This is the function that is called at the end of rangecalc depending on what option you choose. 
+
+- I have 2 lists of ports, one for windows and one for linux. I iterate through the addresses in the same way that I did in the pingScan function. 
+
+- The difference here is that I also iterate through the ports in the list PER address... this can be rather time consuming in some cases but it is thorough. 
+
+- If the address is live and not already in the list of live addresses, add it to the list.
+
+### But why?
+Some firewall rules may prevent you from pinging machines properly, this gets around **SOME** firewall restrictions. So when pingscan can't be used, this can be used instead. Adds more options to the users for enumeration.
+
+## SNMP Enumeration: 
+This is an interesting one. SNMP stands for "Simple Network Management Protocol" and is used in large networks with many users by administrators to do network monitoring. This protocol can contain some very interesting and useful information... 
+
+A successfully decoded SNMP request is then authenticated using the community string. Therefore, for the project example I already know the community string. Think of this as a password. In the future, I would try to implement a feature to try and brute force the community string. 
+
+My function uses OIDs (Object Identifier) to get the information we need. This changes per OS so I have the option for linux and windows OIDs. An OID looks like some numbers separated by dots. 
+
+For example, the start of an OID may look something like `1.3.6.1.4.1...`
+
+
+| Number | Label | Explanation | 
+| -------- | :-------: | -----------: |
+| 1 | iso | establishes that this is an OID. All OIDs start with 1 |
+| 3 | org | Used to specify the organization that built the device. |
+| 6 | dod | Department of Defense which is the organization that established the Internet first. |
+| 1 | internet | To denote that all communications will happen through the Internet. |
+| 4 | private | Determines that this device is made by a private organization and not a government one. |
+| 1 | enterprise |  This value denotes that the device is made by an enterprise or a business entity. |
+
+You may be able to make your own OIDs but I stuck with some OS specific ones that I can just chuck in and use. 
+
+```python
+def snmpEnum(ip,n):
+        systemInfo="iso.3.6.1.2.1.1"
+        RunningProcesses="1.3.6.1.2.1.25.4.2.1.2"
+        InstalledSoftware="1.3.6.1.2.1.25.6.3.1.2"
+        Hostname="1.3.6.1.2.1.1.5"
+        Users="1.3.6.1.4.1.77.1.4.1"
+        LinuxProcesses="1.3.6.1.2.1.25.4.2.1.2"
+        LinuxsysInfo="1.3.6.1.2.1.1"
+        LinuxHostname="1.3.6.1.2.1.1.5"
+
+        cmd_gen=cmdgen.CommandGenerator()
+        comm_data=cmdgen.CommunityData('public','public',1)
+        transport=cmdgen.UdpTransportTarget((ip,161))
+
+        startWalk=getattr(cmd_gen,'nextCmd')
+
+        res = (errorIndication, errorStatus, errorIndex, varBinds) = startWalk(comm_data,transport,systemInfo)
+
+
+        if not errorIndication is None or errorStatus is True:
+        #if i!=len(snmp_communities):
+        #i=i+1
+
+            print("No SNMP found!")
+        else:
+            os.system('clear')
+
+            #print("COMMUNITY STRING " + str(comm_data) + " FOUND\n")
+               #print("USING OID "+OID+"\n")
+            if n==1:
+                    print("------------------ SYSTEM INFO ------------------\n")
+                    pprint(varBinds)
+                    res=(errorIndication,errorStatus,errorIndex,varBinds)=startWalk(comm_data,transport,RunningProcesses)
+                    print("\n------------------ RUNNING PROCESSES -------------\n")
+                    pprint(varBinds)
+                    res=(errorIndication,errorStatus,errorIndex,varBinds)=startWalk(comm_data,transport,InstalledSoftware)
+                    print("\n----------------- INSTALLED SOFTWARE ---------------\n")
+                    pprint(varBinds)
+            if n==2:
+                    print("----------------- SYSTEM INFO ---------------------\n")
+                    res=(errorIndication,errorStatus,errorIndex,varBinds)=startWalk(comm_data,transport,LinuxsysInfo)
+                    pprint(varBinds)
+                    print("------------------- RUNNING PROCESSES ----------------\n")
+                    res=(errorIndication,errorStatus,errorIndex,varBinds)=startWalk(comm_data,transport,LinuxProcesses)
+                    pprint(varBinds)
+
+```
+
+Ok so I have the different OIDs set at the top as strings. 
+I use `from pysnmp.entity.rfc3413.oneliner import cmdgen` to do the SNMP walk.
+- set the community data string
+- set the target ip and snmp port
+- Start SNMP walk
+- Print info depending on operating system and OIDs used. 
+
+You may  be wondering what is an "snmp walk" ? 
+
+SNMPWALK is an SNMP application that uses SNMP GETNEXT requests to query a network device for information. 
+
+### But why?
+It allows us to see some useful info.
+
+When enumerating a target, you may not know what information you need until you give it a context where it becomes useful. So it is good to collect all the info you can, even if it may not be obviously useful at first :)
+
+Gives yet another way to get info from a network or devices on that network.
+
