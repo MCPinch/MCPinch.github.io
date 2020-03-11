@@ -372,3 +372,55 @@ When enumerating a target, you may not know what information you need until you 
 
 Gives yet another way to get info from a network or devices on that network.
 
+## MAC address changer:
+I also added some functions that allow you to change your MAC address.
+
+```python 
+def changeMACrand(interface):
+# changing mac helps our device remain anonymous
+        getCurrentMAC('eth0')
+        random_mac="02:00:00:%02x:%02x:%02x" % (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+        subprocess.call(["sudo","ifconfig", interface, "down"])
+        subprocess.call(["sudo","ifconfig", interface, "hw", "ether", random_mac])
+        subprocess.call(["sudo","ifconfig", interface, "up"])
+        global RANDOM_MAC
+        RANDOM_MAC= random_mac
+def changeMACinput(interface):
+        getCurrentMAC('eth0')
+        print("CAUTION... MAKE SURE YOU KNOW WHAT TO CHANGE IT TO, COULD BREAK THINGS!")
+        input_mac=raw_input("Enter MAC: ")
+        subprocess.call(["sudo","ifconfig", interface, "down"])
+        subprocess.call(["sudo","ifconfig",interface,"hw","ether",str(input_mac)])
+        subprocess.call(["sudo","ifconfig",interface,"up"])
+        print("Changed MAC to: " + str(input_mac))
+        return
+def getCurrentMAC(interface):
+        current_mac=get_mac_address(interface=interface)
+        print("Current MAC is: " + str(current_mac))
+        with open("backup_mac.txt","a") as myfile: #in case things go wrong...
+                myfile.write(str(current_mac+"\n"))
+```
+
+- First of all, the _changeMACrand_ function changes the devices MAC address to a random one. 
+- For the changeMAC functions, I use subprocesses to do commands on the local machine. It simply takes the interface we want down, changes the mac address and brings it back up again.
+- The _changeMACinput_ function changes the mac address based on user input.
+- The _getCurrentMAC_ function gets the MAC address that is currently set and saves it to a backup file. This is used in case anything goes wrong and we need to change a MAC address back to a previous one.
+
+### But why?
+This allows us to stay anonymous on the network and may have other uses depending on the type of network used. 
+Being able to enter a known mac may allow you to spoof a mac address of another host on a network which can lead to more enumeration opportunities. In the future we may be able to implement a MiTM (man in the middle) attack with this functionality.
+
+I also made this function that gets the MAC addresses of active hosts on the network and puts them in a list. In the future, we could use this to have an option where a user can enter the MAC address they want to change to by selecting it from the list instead of entering it manually...
+
+```python 
+def getMAC(ip_list):
+        mac_list=[]
+        for i in range(0,len(ip_list)):
+                ip_mac=get_mac_address(ip=str(ip_list[i]))
+                mac_list.append(ip_mac)
+        print(mac_list)
+        return mac_list
+        
+ ```
+ 
+ 
