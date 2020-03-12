@@ -422,9 +422,8 @@ def getMAC(ip_list):
         return mac_list
         
  ```
- 
- ## Network Sniffer:
- I implemented a little network sniffing function that sniffs for IP packets in the network and shows us the source and destination IPs of those packets.
+## Network Sniffer:
+I implemented a little network sniffing function that sniffs for IP packets in the network and shows us the source and destination IPs of those packets.
  
  ```python
  def sniff_packets():
