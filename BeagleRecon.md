@@ -423,4 +423,28 @@ def getMAC(ip_list):
         
  ```
  
+ ## Network Sniffer:
+ I implemented a little network sniffing function that sniffs for IP packets in the network and shows us the source and destination IPs of those packets.
  
+ ```python
+ def sniff_packets():
+         sniff(filter="ip",prn=ip_packets)
+
+def ip_packets(packet):
+        if IP in packet:
+                ip_src=packet[IP].src
+                ip_dst=packet[IP].dst
+
+        print(str(ip_src) +" -> " + str(ip_dst))
+```
+
+- The sniff packets function is called from one of my menus. This uses the sniff function from the scapy library.
+- It needs a filter for the type of packet and a function, I pass it the IP packet type and the ip_packets function.
+- The ip_packets function takes the souce and destination IPs from the packets and prints them.
+
+At the moment the sniffer is quite basic but could still yield some useful info. In the future I may implement an option to sniff for different types of packets and perhaps I can find a way to print more useful info... I may also make it so that it saves the output to a file for later examination. We could store these files on an FTP server if we get that working. 
+
+### But why?
+Seeing how often devices communicate and who talks to who on a network could provide us with some good information on mapping the network out. We may be able to tell which devices are the most active etc. 
+
+
