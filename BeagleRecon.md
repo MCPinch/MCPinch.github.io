@@ -20,8 +20,27 @@ Log in as user _debian_ with the password _temppwd_.
 Ethernet over USB is such a pain to get working, all the documentation is horribly out of date and none of it actually works. So, I just plugged it in via Ethernet cable.
 
 Do le updates and should be ready to go... oh and one more thing!
+I use a few libraries in my code that I include at the start:
+```python
+import os
+from getmac import *
+from pysnmp.entity.rfc3413.oneliner import cmdgen
+from ftplib import FTP
+from scapy.all import *
+from scapy.layers.http import HTTPRequest
+import random
+import platform
+import re
+import struct
+import sys
+import socket
+import fcntl
+import subprocess
+import nmap
+from pprint import pprint
+```
 
-I use the pysnmp library for my script, so you need to pip install it (if pip is being annoying and giving you errors after you have updated, use `uninstall distributions` and it should work)
+So you need to pip install some of these libraries that aren't already built in. (if pip is being annoying and giving you errors after you have updated, use `uninstall distributions` and it should work)
 
 # The CODE:
 Now onto the meaty part, the code!
@@ -573,5 +592,171 @@ The way I call it in the menu can be a bit confusing, so I will show it here:
 - Gets user input for the target ip for the banner grabbing.
 - Gets openports by calling the portscan function with the target ip and the second choice which is the brute force option.
 
+
+## The Menus:
+I also wrote the code for the menus that allow the program to function smoothly.
+I will put them here so you have a more complete idea of the program.
+
+```python
+def scanMenu(ip,netmask): #can choose what type of scan you want to do for host discovery.
+        n=0
+        while(n!=5):
+               print("1) Ping Scanner \n" + "2) TCP Scan \n" + "3) Change MAC address \n" + "4) Packet sniffer? \n" + "5) Quit \n" )
+               n=input("choice--> ")
+               if n==1:
+                     range_calculator(ip,netmask,n)
+                     menu(success)
+               if n==2:
+                     range_calculator(ip,netmask,n)
+                     menu(success)
+               if n==3:
+                     changeMACmenu()
+                     #scanMenu(ip,netmask)
+               if n==4:
+                     sniffer_menu()
+                     
+```
+                       
+The scan menu is the first menu that is called after the range calculation function is done. This presents the option that the user can take to further enumerate the network.
+
+```python
+def menu(success): #once the pings are done, a menu opens with different options...
+        #range_calculator(ip,netmask)
+        '''given a choice, can perform different recon tasks.'''
+        arp_done = 0
+        n=0
+        while n!=11:
+                print("The following ip's have been detected: " + str(success) + "\n")
+                print("---------------------------------------------------------")
+                print("What would you like to do next? ")
+                print("1) Port Scan \n")
+                print("2) Probe for anon FTP \n")
+                print("3) SNMP Enumeration\n")
+                print("4) OS Detection\n")
+                print("5) MAC  address discovery\n")
+                print("6) Change MAC address \n")
+                print("7) ARP Spoofer \n")
+                print("8) Re-assign addresses after ARP spoof \n")
+                print("9) Network Sniffer \n")
+                print("10) Banner Grabbing \n")
+                print("11) Quit \n")
+                n = input("Choice --> ")
+
+                if n==1: #should be able to choose an ip from the list of successful pings and scan it specifically...
+                        os.system('clear') #clears screen so doesnt get crowded...
+                        print("Which IP you want to run a port scan on?\n")
+                        print(success)
+                        choice=input("Input ip list index: ") #choose index of  list of ip's.
+                        ip_menu=success[int(choice)]
+                        print("Choose what port scan you want to do: \n")
+                        print("1) Top 20 scan\n")
+                        print("2) Brute force (scan all ports\n")
+
+                        n=input("choose --> ")
+                        Portscan(ip_menu,n)
+
+                if n==2:
+                        os.system('clear') #clears screen so doesnt get crowded...
+                        print("FTP stuffs...\n")
+                        print(success)
+                        choice=input("Input ip list index: ")
+                        ip_menu=success[int(choice)]
+                        checkFTP(str(ip_menu),21)
+
+                if n==3:
+                        os.system('clear') #clears screen so doesnt get crowded...
+                        print(success)
+                        choice=input("Input ip list index: ")
+                        ip_menu=success[int(choice)]
+                        n=input("Enter 1 for windows enum and 2 for linux: ")
+                        snmpEnum(str(ip_menu),n)
+                if n==4:
+                        os.system('clear')
+                        print(success)
+                        choice=input("Input ip list index: ")
+                        ip_menu=success[int(choice)]
+                        #AD OPEN PORT ARRAY, DECLARE AS GLOBAL VAR AND PASS TO FUNCTION. LOOP THRU.
+                        os_detection(ip_menu)
+                if n==5:
+                        os.system('clear')
+                        #getMAC(success)
+                        print("IP addresses: " + str(success))
+                        print("MAC addresses: " + str(getMAC(success)))
+                if n==6:
+                        os.system('clear')
+                        print("MAC addresses: " + str(getMAC(success)))
+                        changeMACmenu()
+                if n==7:
+                        os.system('clear')
+                        i=0
+                        print("IP's : " + str(success))
+                        ip_choice=input("Enter index of target ip: ")
+                        arp_target=str(success[ip_choice])
+                        arp_host = get_ip_address('eth0')
+                        target_mac= get_mac_address(ip=arp_target)
+                        print("MAC of target is: " + str(target_mac))
+                        host_mac= get_mac_address(interface='eth0')
+                        enable_linux_iproute()
+
+                        while(i!=1):
+                                try:
+
+                                        spoof(arp_target,arp_host,target_mac)
+                                        spoof(arp_host,arp_target,host_mac)
+                                        time.sleep(1)
+                                except KeyboardInterrupt:
+                                        arp_done=1
+                                        i=1
+                if n==8 and arp_done ==1 :
+                        print("Restoring Network...")
+                        restore(arp_target,arp_host,target_mac,host_mac)
+                        restore(arp_host,arp_target,host_mac,target_mac)
+                if n==9:
+                        os.system('clear')
+                        sniffer_menu()
+                elif n==8 and arp_done ==0:
+                        print("ARP spoof hasn't been done yet...")
+                if n==10:
+                         os.system('clear')
+                         print("Detected IP addresses are: " + str(success))
+                         ip_choice=input("Enter the index of target ip: ")
+                         bannertarget=str(success[ip_choice])
+                         bannergrabbing(bannertarget,Portscan(success[ip_choice],2))
+                         
+```
+
+This is the main menu function that is called after any of the host scanning options are selected in the scan menu before.
+This is where most of the additional enumeration takes place. 
+It takes in the list  of active hosts on the network (success) that was appended to from one of the scanning functions on the scan menu.
+
+```python
+def changeMACmenu():
+        n=0
+        while n!=3:
+                n=input("1) Change to Random MAC address\n2) Input your own MAC address\n3) Quit \n")
+
+                if n==1:
+                        changeMACrand('eth0')
+                if n==2:
+                        changeMACinput('eth0')
+                        
+```
+
+This is the MAC address functions menu that is called once you select it from the main menu. You can choose to either change your MAC address to a random value or to one based on user input. 
+
+```python 
+def sniffer_menu():
+        n=0
+        while n!=3:
+               n=input("1) Sniff source and dest IPs\n2) Sniff HTTP-GET requests\n3) Quit \n")
+               if n==1:
+                       sniff_packets()
+               if n==2:
+                       sniff_http()
+                       
+                       
+```
+
+The sniffer menu is called from the main menu once you select the network sniffer option. It then calls the relevant functions. You can go back between the menus easily due to the way I coded it but if you back out to the scan menu, you will have to scan the network again before you get back to the main menu function. Perhaps in the future we could have added an option where if the success list is already populated and you're in the scan menu function, it will ask if you want to scan again or if you want to skip to the menu function...
 
 
