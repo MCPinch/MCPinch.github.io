@@ -617,7 +617,7 @@ def scanMenu(ip,netmask): #can choose what type of scan you want to do for host 
                      
 ```
                        
-The scan menu is the first menu that is called after the range calculation function is done. This presents the option that the user can take to further enumerate the network.
+The scan menu is the first menu that is called. This presents the option that the user can take to further enumerate the network. It then calls the range calculation function and calls the appropriate function once the calculation is done depending on the user input (n). 
 
 ```python
 def menu(success): #once the pings are done, a menu opens with different options...
