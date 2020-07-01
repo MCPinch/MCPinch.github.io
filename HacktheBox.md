@@ -1,4 +1,12 @@
 # This is where my writeups for hackthebox will go!
+
+Hackthebox is a website where people upload vulnerable machines for people to hack into. Most of these will test one or two skills or specific vulnerabilities but doing many will give hackers a large understanding of various ways someone may be able to hack into a machine, whilst also making them aware of current exploits that may be on their own systems. 
+
+At the time of writing, I have "Owned" <ins> 18 users </ins> and <ins> 13 systems </ins>
+
+User owns means that I obtained a user flag... essentially, I managed to get access to the account of a normal user on the target machine. 
+System own means that I obtained a root flag... where I have admin privileges on the machine. This is the end goal for all hackthebox machines and allows complete control of the system.
+
 ## Craft Writeup:
 
 One of my favourite machines so far on hackthebox! This felt like a proper hack with custom exploits and having to be able to understand the system before exploting it.
