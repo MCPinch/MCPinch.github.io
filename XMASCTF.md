@@ -196,7 +196,7 @@ Drops root shell! Get root flag :)
 
 - Use wildcard wisely, not wildly. A user can find a way to change things in unexpected ways...
 
-![Rarityhappy](/SiteImages/tumblr_m4aapqcT8O1r3k1m8o6_500.png)
+<!--- ![Rarityhappy](/SiteImages/tumblr_m4aapqcT8O1r3k1m8o6_500.png) -->
 
 ## Intercept: 
 This is a cipher challenge. At the start, we are presented with the following coded message:
