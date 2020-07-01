@@ -309,7 +309,7 @@ And we got root!!! Wow, my first buffer overflow :)
 
 - Careful of seg faults... Watch out for user input!
 
-![partycannon](/SiteImages/partycannon.png)
+<!--- ![partycannon](/SiteImages/partycannon.png) -->
 
 ## Marking Time:
 With this challenge, we get a set of creds at the start:
@@ -506,7 +506,7 @@ Putting _ziemni_ as the username gave me gold membership and a weird number of n
 
 This gives us a few more options. Unfortunately, this was as far as I managed to get, the BOF was too hard for me. There was also another very difficult BOF challenge that I couldn't do. 
 
-![raritysad](/SiteImages/tumblr_m4aapqcT8O1r3k1m8o2_400.png)
+<!--- ![raritysad](/SiteImages/tumblr_m4aapqcT8O1r3k1m8o2_400.png) --> 
 
 But i learned a lot! 
 I was able to get pretty far in and do some stuff I've never done before, was much fun.
