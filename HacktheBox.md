@@ -373,7 +373,7 @@ Search for passwd keyword to see if there are any values we can find...
 Try ssh in users with this password...
 SSH worked with user jimmy.
 
-jimmy@openadmin:/var/www/internal$ cat main.php
+`jimmy@openadmin:/var/www/internal$ cat main.php
 <?php session_start(); if (!isset ($_SESSION['username'])) { header("Location: /index.php"); }; 
 # Open Admin Trusted
 # OpenAdmin
@@ -383,12 +383,12 @@ echo "<pre>$output</pre>";
 <html>
 <h3>Don't forget your "ninja" password</h3>
 Click here to logout <a href="logout.php" tite = "Logout">Session
-</html>
+</html>`
 
 
 
 curl http://127.0.0.1/main.php
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+`<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html><head>
 <title>404 Not Found</title>
 </head><body>
@@ -396,7 +396,7 @@ curl http://127.0.0.1/main.php
 <p>The requested URL was not found on this server.</p>
 <hr>
 <address>Apache/2.4.29 (Ubuntu) Server at 127.0.0.1 Port 80</address>
-</body></html>
+</body></html>`
 
 Check other open ports on machine...
 
