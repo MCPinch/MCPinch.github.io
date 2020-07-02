@@ -8,8 +8,8 @@ User owns means that I obtained a user flag... essentially, I managed to get acc
 System own means that I obtained a root flag... where I have admin privileges on the machine. This is the end goal for all hackthebox machines and allows complete control of the system.
 
 
-* [craft](#craft-writeup:)
-* [heist](#heist-writeup:)
+* [craft](#craft-writeup)
+* [heist](#heist-writeup)
 
 ## Craft Writeup:
 
