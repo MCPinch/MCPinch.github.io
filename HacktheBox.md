@@ -8,9 +8,9 @@ User owns means that I obtained a user flag... essentially, I managed to get acc
 System own means that I obtained a root flag... where I have admin privileges on the machine. This is the end goal for all hackthebox machines and allows complete control of the system.
 
 
-* Craft(#craft)
-* Heist(#heist)
-## Craft Writeup: [craft](#craft)
+* [craft](#craft)
+* [heist](#heist)
+## Craft Writeup:(#craft)
 
 One of my favourite machines so far on hackthebox! This felt like a proper hack with custom exploits and having to be able to understand the system before exploting it.
 The custom API forces you to look for things that could be vulnerable. This box is medium difficulty.
@@ -127,7 +127,7 @@ ssh into box with key as password
 I completed this box during my first semester and it was the most challenging and engaging yet. The ones that I have done at the time of writing are a bit harder and some just as interesting which I will upload soon!
 
 
-## Heist Writeup: [heist](#heist)
+## Heist Writeup:(#heist)
 
 This is one of the first windows machines I hacked and was a great learning experience. From this, I learnt of tools that would help me in future machines.
 
