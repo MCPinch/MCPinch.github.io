@@ -376,28 +376,22 @@ SSH worked with user jimmy.
 
 `jimmy@openadmin:/var/www/internal$ cat main.php
 <?php session_start(); if (!isset ($_SESSION['username'])) { header("Location: /index.php"); }; 
-# Open Admin Trusted
-# OpenAdmin
+ Open Admin Trusted
+ OpenAdmin
 $output = shell_exec('cat /home/joanna/.ssh/id_rsa');
 echo "<pre>$output</pre>";
 ?>
-<html>
-<h3>Don't forget your "ninja" password</h3>
-Click here to logout <a href="logout.php" tite = "Logout">Session
-</html>`
+Don't forget your "ninja" password`
+
 
 
 
 curl http://127.0.0.1/main.php
-`<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-<html><head>
-<title>404 Not Found</title>
-</head><body>
-<h1>Not Found</h1>
-<p>The requested URL was not found on this server.</p>
-<hr>
-<address>Apache/2.4.29 (Ubuntu) Server at 127.0.0.1 Port 80</address>
-</body></html>`
+
+404 Not Found
+
+Apache/2.4.29 (Ubuntu) Server at 127.0.0.1 Port 80
+
 
 Check other open ports on machine...
 
