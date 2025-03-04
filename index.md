@@ -9,5 +9,6 @@ This will be used to post things I have done and learnt during my hacking journe
 - [XMAS CTF](XMASCTF.md)
 - [Linux Trainer Notes](LinuxTrainer.md)
 - [Curl Notes](Curl.md)
+- [Fortress](Fortress.md)
 
 ![HTB Badge](https://www.hackthebox.eu/badge/image/60062)
