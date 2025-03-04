@@ -505,7 +505,6 @@ Putting _ziemni_ as the username gave me gold membership and a weird number of n
 ![wombleplat](SiteImages/CTFpics/WomblesZiemni.png)
 
 This gives us a few more options. Unfortunately, this was as far as I managed to get, the BOF was too hard for me. There was also another very difficult BOF challenge that I couldn't do. 
-But much was learned! Onto the next challenge...
 
 But i learned a lot! 
 I was able to get pretty far in and do some stuff I've never done before, was much fun.
